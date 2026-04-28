@@ -20,13 +20,11 @@ def order_festival_alerts(alerts: list[tuple[int, str]]) -> list[str]:
     """
     heap = []
 
-    # Push all alerts into heap
     for priority, title in alerts:
         heapq.heappush(heap, (priority, title))
 
     result = []
 
-    # Pop in priority order
     while heap:
         _, title = heapq.heappop(heap)
         result.append(title)
@@ -42,7 +40,6 @@ def order_festival_alerts_stable(alerts: list[tuple[int, str]]) -> list[str]:
     """
     heap = []
 
-    # Add index to keep stable order
     for index, (priority, title) in enumerate(alerts):
         heapq.heappush(heap, (priority, index, title))
 
@@ -67,13 +64,14 @@ def top_k_festival_alerts(alerts: list[tuple[int, str]], k: int) -> list[str]:
 
     heap = []
 
-    for priority, title in alerts:
-        heapq.heappush(heap, (priority, title))
+    # IMPORTANT: use index to keep stable order
+    for index, (priority, title) in enumerate(alerts):
+        heapq.heappush(heap, (priority, index, title))
 
     result = []
 
     for _ in range(min(k, len(heap))):
-        _, title = heapq.heappop(heap)
+        _, _, title = heapq.heappop(heap)
         result.append(title)
 
     return result
@@ -89,9 +87,7 @@ def peek_next_festival_alert(alerts: list[tuple[int, str]]) -> str | None:
     if not alerts:
         return None
 
-    # Make a copy so original list is unchanged
     heap = alerts.copy()
     heapq.heapify(heap)
 
-    priority, title = heap[0]
-    return title
+    return heap[0][1]
