@@ -1,233 +1,109 @@
 # Week 7 Homework: Moonlight Festival Control Booth
 
-**Due:** Sun 2026-04-19 23:59
-**Topic:** Heaps + Priority Queues (`heapq`)
-**Standards:** S11 primary, with S1 and S3 support
+## Summary
+
+This project uses Python’s `heapq` module to manage festival alerts using a priority queue. Each alert has a priority where smaller numbers mean higher urgency. The program processes alerts in the correct order, handles ties properly, and supports retrieving the top K alerts and peeking the next alert.
 
 ---
 
-## Story
+## Approach
 
-You are helping run the control booth for the Moonlight Festival.
+### order_festival_alerts
 
-During the festival, the control booth receives many alerts and requests, such as:
-
-* "Main Stage microphone failed"
-* "North Gate security call"
-* "Performer arrived at backstage"
-* "Rain warning near food court"
-
-Each alert has a **priority number**:
-
-* `1` = most urgent
-* `2` = urgent
-* `3` = normal
-* larger numbers = less urgent
-
-The booth should not always respond in arrival order.
-It should respond in **priority order**.
-
-Your job is to use Python’s `heapq` module to help organize these festival alerts.
+- Created a min-heap using `heapq`
+- Inserted all `(priority, title)` pairs into the heap
+- Used `heappop()` to extract alerts in correct priority order
+- Stored titles in result list
 
 ---
 
-## Learning goals
+### order_festival_alerts_stable
 
-By completing this homework, you should be able to:
-
-* use `heapq` correctly
-* solve a priority-queue problem with a real story
-* handle tie cases clearly
-* write tests that prove your code works
-* explain time and space complexity carefully
+- Added index to maintain order: `(priority, index, title)`
+- Heap compares priority first, then index
+- This ensures stable ordering when priorities are equal
 
 ---
 
-## Files you must complete
+### top_k_festival_alerts
 
-```text
-src/challenges.py
-tests/test_challenges.py
-README.md
-```
-
----
-
-## Function 1: `order_festival_alerts`
-
-Write a function:
-
-```python
-order_festival_alerts(alerts: list[tuple[int, str]]) -> list[str]
-```
-
-Each alert is a tuple like:
-
-```python
-(priority, title)
-```
-
-Return a list of alert titles in the order they should be handled.
-
-### Example
-
-```python
-alerts = [
-    (2, "Food court power issue"),
-    (1, "Main Stage microphone failed"),
-    (3, "Lost umbrella report"),
-]
-```
-
-Expected result:
-
-```python
-["Main Stage microphone failed", "Food court power issue", "Lost umbrella report"]
-```
-
-### Rules
-
-* Use `heapq`
-* Smaller priority number goes first
-* Do not just sort the full list and stop there
+- Used heap to store alerts
+- Extracted only first `k` elements
+- Handled edge cases:
+  - If `k <= 0`, return empty list
+  - If `k > len(alerts)`, return all alerts
 
 ---
 
-## Function 2: `order_festival_alerts_stable`
+### peek_next_festival_alert
 
-Write a function:
-
-```python
-order_festival_alerts_stable(alerts: list[tuple[int, str]]) -> list[str]
-```
-
-If two alerts have the same priority, the one that appeared **earlier in the input list** should be handled first.
-
-### Example
-
-```python
-alerts = [
-    (1, "Security check at North Gate"),
-    (1, "Lighting issue at East Stage"),
-    (2, "Performer arrived backstage"),
-]
-```
-
-Expected result:
-
-```python
-["Security check at North Gate", "Lighting issue at East Stage", "Performer arrived backstage"]
-```
-
-### Hint
-
-You will probably need to store **extra information** in the heap.
+- Copied the list to avoid modifying original input
+- Converted copy into heap using `heapify()`
+- Returned the smallest element (`heap[0]`)
+- Returned `None` if input is empty
 
 ---
 
-## Function 3: `top_k_festival_alerts`
-
-Write a function:
+## Code Implementation
 
 ```python
-top_k_festival_alerts(alerts: list[tuple[int, str]], k: int) -> list[str]
-```
+from __future__ import annotations
+import heapq
 
-Return the titles of the **k most urgent alerts**, from most urgent to less urgent.
 
-### Example
+def order_festival_alerts(alerts: list[tuple[int, str]]) -> list[str]:
+    heap = []
 
-```python
-alerts = [
-    (3, "Merch tent low stock"),
-    (1, "Storm warning"),
-    (2, "Ticket scanner issue"),
-    (1, "Stage power failure"),
-]
-```
+    for priority, title in alerts:
+        heapq.heappush(heap, (priority, title))
 
-If `k = 3`, the expected result is:
+    result = []
 
-```python
-["Storm warning", "Stage power failure", "Ticket scanner issue"]
-```
+    while heap:
+        _, title = heapq.heappop(heap)
+        result.append(title)
 
-### Rules
+    return result
 
-* Use `heapq`
-* Handle `k` carefully
 
----
+def order_festival_alerts_stable(alerts: list[tuple[int, str]]) -> list[str]:
+    heap = []
 
-## Stretch: `peek_next_festival_alert`
+    for index, (priority, title) in enumerate(alerts):
+        heapq.heappush(heap, (priority, index, title))
 
-Write a function:
+    result = []
 
-```python
-peek_next_festival_alert(alerts: list[tuple[int, str]]) -> str | None
-```
+    while heap:
+        _, _, title = heapq.heappop(heap)
+        result.append(title)
 
-Return the title of the next alert that should be handled **without permanently changing the original input**.
+    return result
 
-If there are no alerts, return `None`.
 
----
+def top_k_festival_alerts(alerts: list[tuple[int, str]], k: int) -> list[str]:
+    if k <= 0:
+        return []
 
-## What your tests must prove
+    heap = []
 
-### For `order_festival_alerts`
+    for priority, title in alerts:
+        heapq.heappush(heap, (priority, title))
 
-* normal case
-* empty input
-* one alert
+    result = []
 
-### For `order_festival_alerts_stable`
+    for _ in range(min(k, len(heap))):
+        _, title = heapq.heappop(heap)
+        result.append(title)
 
-* different priorities
-* same-priority tie case
-* all alerts same priority
+    return result
 
-### For `top_k_festival_alerts`
 
-* `k = 0`
-* `k > len(alerts)`
-* duplicate priorities
-* empty input
+def peek_next_festival_alert(alerts: list[tuple[int, str]]) -> str | None:
+    if not alerts:
+        return None
 
-### For the stretch
+    heap = alerts.copy()
+    heapq.heapify(heap)
 
-* empty input
-* normal case
-
----
-
-## Requirements
-
-* Python 3.11+
-* stdlib only
-* public functions should use type hints
-* write clear docstrings
-* keep code readable
-
----
-
-## Complexity expectations
-
-In your README, explain:
-
-* time complexity
-* space complexity
-* why a heap is a good fit here
-
-Do not just write something vague like “fast” or “good performance.”
-
----
-
-## Submission checklist
-
-* [ ] `src/challenges.py` is complete
-* [ ] `tests/test_challenges.py` is complete
-* [ ] `README.md` is complete
-* [ ] `pytest -q` passes
-* [ ] edge cases are tested
-* [ ] work is pushed to the correct GitHub Classroom repo
+    return heap[0][1]
